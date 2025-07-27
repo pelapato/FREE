@@ -19,9 +19,14 @@ jobs:
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
         Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd!" -Force)
 
-    - name: Iniciar túnel LocalXpose TCP para RDP
+    - name: Autenticar no LocalXpose
       env:
         ACCESS_TOKEN: ${{ secrets.LX_TOKEN }}
+      run: |
+        cd localxpose
+        .\loclx.exe authtoken $Env:ACCESS_TOKEN
+
+    - name: Iniciar túnel TCP para RDP
       run: |
         cd localxpose
         .\loclx.exe tunnel tcp --port 3389
