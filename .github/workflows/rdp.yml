@@ -21,9 +21,6 @@ jobs:
         net user runneradmin P@ssw0rd!
 
     - name: Iniciar túnel TCP LocalXpose
-      env:
-        ACCESS_TOKEN: ${{ secrets.LX_TOKEN }}
       run: |
         cd localxpose
-        .\loclx.exe tunnel tcp --port 3389
-
+        .\loclx.exe tunnel tcp --port 3389 --token ${{ secrets.LX_TOKEN }}
