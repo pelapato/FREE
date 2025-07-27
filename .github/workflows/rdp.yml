@@ -1,0 +1,21 @@
+name: RDP com Cloudflare Tunnel
+
+on: [push, workflow_dispatch]
+
+jobs:
+  remote-access:
+    runs-on: windows-latest
+
+    steps:
+    - name: Habilitar RDP e definir senha
+      run: |
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
+        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
+        Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd!" -Force)
+
+    - name: Baixar Cloudflared
+      run: Invoke-WebRequest https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe -OutFile cloudflared.exe
+
+    - name: Iniciar túnel Cloudflare TCP para RDP
+      run: .\cloudflared.exe tunnel --url tcp://localhost:3389
