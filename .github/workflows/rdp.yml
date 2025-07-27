@@ -1,4 +1,4 @@
-name: RDP com Cloudflare Tunnel
+name: RDP com LocalXpose
 
 on: [push, workflow_dispatch]
 
@@ -14,8 +14,15 @@ jobs:
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
         Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd!" -Force)
 
-    - name: Baixar Cloudflared
-      run: Invoke-WebRequest https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe -OutFile cloudflared.exe
+    - name: Baixar LocalXpose
+      run: |
+        Invoke-WebRequest https://api.localxpose.io/api/v2/downloads/localxpose-windows-amd64.zip -OutFile lx.zip
+        Expand-Archive lx.zip
 
-    - name: Iniciar túnel Cloudflare TCP para RDP
-      run: .\cloudflared.exe tunnel --url tcp://localhost:3389
+    - name: Autenticar LocalXpose
+      run: .\localxpose-windows-amd64\lx.exe authtoken $Env:LX_TOKEN
+      env:
+        LX_TOKEN: ${{ secrets.LX_TOKEN }}
+
+    - name: Criar túnel TCP para RDP
+      run: .\localxpose-windows-amd64\lx.exe tcp 3389
