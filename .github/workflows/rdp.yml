@@ -1,28 +1,25 @@
-name: RDP com LocalXpose
+name: RDP via LocalXpose
 
-on: [push, workflow_dispatch]
+on: [workflow_dispatch]
 
 jobs:
-  remote-access:
+  build:
     runs-on: windows-latest
 
     steps:
-    - name: Habilitar RDP
+    - name: Baixar LocalXpose
+      run: |
+        Invoke-WebRequest https://github.com/pelapato/LocalXpose/raw/main/loclx-windows-amd64.zip -OutFile loclx.zip
+        Expand-Archive loclx.zip -DestinationPath localxpose
+
+    - name: Configurar RDP
       run: |
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
         Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
-        Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd!" -Force)
+        net user runneradmin P@ssw0rd!
 
-    - name: Baixar LocalXpose
-      run: |
-        Invoke-WebRequest https://github.com/pelapato/LocalXpose/raw/main/loclx-windows-amd64.zip -OutFile lx.zip
-        Expand-Archive lx.zip -DestinationPath localxpose
-
-    - name: Autenticar LocalXpose
-      run: .\localxpose\loclx.exe authtoken $Env:LX_TOKEN
+    - name: Iniciar túnel LocalXpose
+      run: .\localxpose\loclx.exe tcp --token $Env:LX_TOKEN 3389
       env:
         LX_TOKEN: ${{ secrets.LX_TOKEN }}
-
-    - name: Iniciar túnel TCP
-      run: .\localxpose\loclx.exe tcp 3389
